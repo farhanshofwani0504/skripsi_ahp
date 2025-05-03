@@ -17,4 +17,10 @@ router.post(
   notifikasiController.kirimEmailKaryawan
 );
 
+router.post(
+  "/pemecatan",
+  authMiddleware,
+  notifikasiController.kirimPemecatanMassal
+);
+
 module.exports = router;

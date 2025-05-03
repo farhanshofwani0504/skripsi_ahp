@@ -46,9 +46,11 @@ model BobotKriteria {
   id         Int      @id @default(autoincrement())
   kriteriaId Int      @unique
   bobot      Float
+  cr         Float?   //  👈   NEW ── nullable biar nggak rusak data lama
 
   kriteria   Kriteria @relation(fields: [kriteriaId], references: [id], onDelete: Cascade)
 }
+
 
 model WarningLog {
   id          Int       @id @default(autoincrement())
