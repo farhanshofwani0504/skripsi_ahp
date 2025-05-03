@@ -8,58 +8,62 @@ datasource db {
 }
 
 model Karyawan {
-  id            Int             @id @default(autoincrement())
-  nama          String
-  posisi        String
-  email         String?          // ⬅️ Pakai tanda tanya (?) supaya nullable
-  penilaian     Penilaian[]
-  warningLogs   WarningLog[]
+  id          Int       @id @default(autoincrement())
+  nama        String
+  posisi      String
+  email       String?   @unique
+  startDate   DateTime  @default(now())   // ← NEW
+  skor        Float     @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  penilaian   Penilaian[]
+  warningLogs WarningLog[]
 }
 
 
-
-
-
 model Penilaian {
-  id         Int   @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   karyawanId Int
   kriteriaId Int
   nilai      Float
 
-  karyawan Karyawan @relation(fields: [karyawanId], references: [id])
-  kriteria Kriteria @relation(fields: [kriteriaId], references: [id])
-}
+  createdAt  DateTime @default(now())   // ⬅️ baru
+  karyawan   Karyawan @relation(fields: [karyawanId], references: [id], onDelete: Cascade)
+  kriteria   Kriteria @relation(fields: [kriteriaId], references: [id], onDelete: Cascade)
 
-model User {
-  id       Int    @id @default(autoincrement())
-  username String @unique
-  email    String @unique
-  password String
-  role     String?
+  @@unique([karyawanId, kriteriaId, createdAt]) // 1 input per hari per kriteria (opsional)
 }
 
 
 model Kriteria {
   id            Int             @id @default(autoincrement())
-  nama          String
+  nama          String          @unique
   penilaian     Penilaian[]
-  bobotKriteria BobotKriteria[] // ⬅️ ini ditambahkan
+  bobotKriteria BobotKriteria?
 }
 
 model BobotKriteria {
-  id         Int   @id @default(autoincrement())
-  kriteriaId Int
+  id         Int      @id @default(autoincrement())
+  kriteriaId Int      @unique
   bobot      Float
 
-  kriteria Kriteria @relation(fields: [kriteriaId], references: [id])
+  kriteria   Kriteria @relation(fields: [kriteriaId], references: [id], onDelete: Cascade)
 }
 
 model WarningLog {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   karyawanId  Int
   email       String
   skor        Float
-  tanggal     DateTime @default(now())
+  tanggal     DateTime   @default(now())
 
-  karyawan    Karyawan @relation(fields: [karyawanId], references: [id])
+  karyawan    Karyawan   @relation(fields: [karyawanId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  username String  @unique
+  email    String  @unique
+  password String
+  role     String?
 }

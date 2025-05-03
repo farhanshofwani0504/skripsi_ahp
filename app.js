@@ -16,7 +16,7 @@ const ahpRoutes = require("./src/routes/ahpRoutes");
 const rankingRoutes = require("./src/routes/rankingRoutes");
 const dashboardRoutes = require("./src/routes/dashboardRoutes");
 const notifikasiRoutes = require("./src/routes/notifikasiRoutes");
-
+const bobotRoutes = require("./src/routes/bobot");
 // Use routes
 app.use("/api/notifikasi", notifikasiRoutes);
 app.use("/api/dashboard", dashboardRoutes);
@@ -26,6 +26,7 @@ app.use("/api/karyawan", karyawanRoutes);
 app.use("/api/kriteria", kriteriaRoutes);
 app.use("/api/penilaian", penilaianRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/bobot", bobotRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
