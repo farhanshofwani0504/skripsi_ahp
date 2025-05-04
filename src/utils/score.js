@@ -1,10 +1,10 @@
 // src/utils/score.js
 const THRESHOLDS = [
-  { min: 5, grade: "A" },
-  { min: 4, grade: "B" },
-  { min: 3, grade: "C" },
-  { min: 2, grade: "D" },
-  { min: 1, grade: "E" },
+  { min: 4.5, grade: "A" },
+  { min: 3.5, grade: "B" },
+  { min: 2.5, grade: "C" },
+  { min: 1.5, grade: "D" },
+  { min: 1.0, grade: "E" }, // asumsi minimal skor AHP = 1
 ];
 
 const calcRollingAvg = async (prisma, karyawanId) => {
