@@ -1,6 +1,6 @@
 // controllers/bobotController.js
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../config/prismaClient");
+
 const { hitungSkor6Bulan } = require("../utils/skor");
 
 /* -------- GET semua bobot -------- */

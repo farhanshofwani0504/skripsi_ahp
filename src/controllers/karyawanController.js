@@ -1,11 +1,10 @@
-// --------------------  ESM  --------------------
-import { PrismaClient } from "@prisma/client";
-import { calcRollingAvg, toGrade } from "../utils/score.js";
+const { PrismaClient } = require("@prisma/client");
+const { calcRollingAvg, toGrade } = require("../utils/score.js");
 
 const prisma = new PrismaClient();
 
 /* ---------- GET /api/karyawan ---------- */
-export const getAllKaryawan = async (_req, res, next) => {
+exports.getAllKaryawan = async (_req, res, next) => {
   try {
     const list = await prisma.karyawan.findMany({ orderBy: { id: "asc" } });
 
@@ -22,7 +21,7 @@ export const getAllKaryawan = async (_req, res, next) => {
   }
 };
 
-export const getKaryawanById = async (req, res, next) => {
+exports.getKaryawanById = async (req, res, next) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) return res.status(400).json({ message: "ID invalid" });
 
@@ -39,7 +38,7 @@ export const getKaryawanById = async (req, res, next) => {
 };
 
 /* ---------- POST /api/karyawan ---------- */
-export const addKaryawan = async (req, res, next) => {
+exports.addKaryawan = async (req, res, next) => {
   const { nama, posisi, email } = req.body;
   if (!nama || !posisi)
     return res.status(400).json({ message: "nama & posisi wajib diisi" });
@@ -57,7 +56,7 @@ export const addKaryawan = async (req, res, next) => {
 };
 
 /* ---------- DELETE /api/karyawan/:id ---------- */
-export const deleteKaryawan = async (req, res, next) => {
+exports.deleteKaryawan = async (req, res, next) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) return res.status(400).json({ message: "ID invalid" });
 
@@ -72,7 +71,7 @@ export const deleteKaryawan = async (req, res, next) => {
 };
 
 /* ---------- PATCH /api/karyawan/:id ---------- */
-export const updateKaryawan = async (req, res, next) => {
+exports.updateKaryawan = async (req, res, next) => {
   const id = Number(req.params.id);
   const { nama, posisi, email } = req.body;
 

@@ -1,5 +1,5 @@
-import nodemailer from "nodemailer";
-import path from "path";
+const nodemailer = require("nodemailer");
+const path = require("path");
 
 const transporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST,
@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendCustomEmail = async (to, nama, jenisEmail) => {
+exports.sendCustomEmail = async (to, nama, jenisEmail) => {
   const lowerCaseJenis = jenisEmail.toLowerCase(); // Biar aman
 
   let subject = "";
@@ -38,7 +38,7 @@ export const sendCustomEmail = async (to, nama, jenisEmail) => {
 };
 
 // Kirim email dengan lampiran
-export const sendCustomEmailWithAttachment = async (
+exports.sendCustomEmailWithAttachment = async (
   to,
   nama,
   jenisEmail,

@@ -1,24 +1,21 @@
-import fs from "fs-extra";
-import path from "path";
-import { fileURLToPath } from "url";
-import PDFDocument from "pdfkit";
-import { PrismaClient } from "@prisma/client";
-import {
+// PASTIKAN BARIS INI ADA DI PALING ATAS
+const prisma = require("../config/prismaClient");
+
+const fs = require("fs-extra");
+const path = require("path");
+const PDFDocument = require("pdfkit");
+const {
   sendCustomEmailWithAttachment,
   sendCustomEmail,
-} from "../services/emailService.js";
-import { toGrade } from "../utils/score.js";
+} = require("../services/emailService.js");
+const { toGrade } = require("../utils/score.js");
 
-const prisma = new PrismaClient();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+// Variabel __dirname sudah tersedia secara otomatis di CommonJS, tidak perlu dibuat manual
 function generateLaporanPDF(karyawan, nilaiRata) {
   const filename = `Laporan_Kinerja_${karyawan.nama.replace(/ /g, "_")}.pdf`;
   const publicDir = path.join(__dirname, "../../public");
   const filepath = path.join(publicDir, filename);
 
-  // Buat folder public kalau belum ada
   if (!fs.existsSync(publicDir)) {
     fs.mkdirSync(publicDir, { recursive: true });
   }
@@ -44,8 +41,7 @@ function generateLaporanPDF(karyawan, nilaiRata) {
   return filepath;
 }
 
-// POST /api/notifikasi/pemecatan
-export const kirimPemecatanMassal = async (req, res) => {
+const kirimPemecatanMassal = async (req, res) => {
   try {
     const karyawanList = await prisma.karyawan.findMany();
     const result = [];
@@ -77,13 +73,11 @@ export const kirimPemecatanMassal = async (req, res) => {
 
     res.json({ message: "Notifikasi pemecatan terkirim", data: result });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// POST /api/notifikasi/kirim
-export const kirimEmailKaryawan = async (req, res) => {
+const kirimEmailKaryawan = async (req, res) => {
   const { karyawanId, jenisEmail } = req.body;
 
   try {
@@ -103,13 +97,11 @@ export const kirimEmailKaryawan = async (req, res) => {
       message: `Email ${jenisEmail} berhasil dikirim ke ${karyawan.nama}`,
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// Optional placeholder
-export const kirimPeringatan = async (req, res) => {
+const kirimPeringatan = async (req, res) => {
   try {
     res.json({
       message: "Fitur kirim peringatan massal belum diimplementasikan.",
@@ -118,4 +110,11 @@ export const kirimPeringatan = async (req, res) => {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
+};
+
+// PASTIKAN BLOK INI ADA DI PALING BAWAH
+module.exports = {
+  kirimPemecatanMassal,
+  kirimEmailKaryawan,
+  kirimPeringatan,
 };

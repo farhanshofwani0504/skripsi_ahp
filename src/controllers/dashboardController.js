@@ -1,4 +1,4 @@
-const prisma = require('../config/prismaClient');
+const prisma = require("../config/prismaClient");
 
 // =================================
 // Fungsi 1: Kesimpulan Global
@@ -6,12 +6,20 @@ const prisma = require('../config/prismaClient');
 exports.getKesimpulanGlobal = async (req, res) => {
   try {
     const data = await prisma.penilaian.findMany({
-      include: { kriteria: true }
+      include: { kriteria: true },
     });
+
+    // FIX: Tambahkan pengecekan ini untuk menangani kasus tidak ada data
+    if (data.length === 0) {
+      return res.json({
+        kesimpulan: "Belum ada data penilaian untuk membuat kesimpulan.",
+        detail: [],
+      });
+    }
 
     const totalKriteria = {};
 
-    data.forEach(p => {
+    data.forEach((p) => {
       const nama = p.kriteria.nama;
       totalKriteria[nama] = (totalKriteria[nama] || 0) + p.nilai;
     });
@@ -21,7 +29,7 @@ exports.getKesimpulanGlobal = async (req, res) => {
 
     res.json({
       kesimpulan: `Secara umum, karyawan lebih menonjol di ${tertinggi[0]}.`,
-      detail: result.map(([kriteria, total]) => ({ kriteria, total }))
+      detail: result.map(([kriteria, total]) => ({ kriteria, total })),
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -39,17 +47,17 @@ exports.getSkorKaryawan = async (req, res) => {
           include: {
             kriteria: {
               include: {
-                bobotKriteria: true
-              }
-            }
-          }
-        }
-      }
+                bobotKriteria: true,
+              },
+            },
+          },
+        },
+      },
     });
 
-    const hasil = karyawanList.map(k => {
+    const hasil = karyawanList.map((k) => {
       let total = 0;
-      k.penilaian.forEach(p => {
+      k.penilaian.forEach((p) => {
         const bobot = p.kriteria.bobotKriteria?.bobot || 0;
         total += p.nilai * bobot;
       });
@@ -58,7 +66,7 @@ exports.getSkorKaryawan = async (req, res) => {
         id: k.id,
         nama: k.nama,
         posisi: k.posisi,
-        totalSkor: total
+        totalSkor: total,
       };
     });
 
