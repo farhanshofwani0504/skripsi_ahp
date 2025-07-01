@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">51.85% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>14/27</span>
+                <span class='fraction'>27/27</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">51.85% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>14/27</span>
+                <span class='fraction'>27/27</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -100,21 +100,21 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// src/utils/score.js
@@ -126,22 +126,22 @@ const THRESHOLDS = [
   { min: 1.0, grade: "E" }, // asumsi minimal skor AHP = 1
 ];
 &nbsp;
-const calcRollingAvg = <span class="fstat-no" title="function not covered" >async (prisma, karyawanId) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  const from = new Date();</span>
-<span class="cstat-no" title="statement not covered" >  from.setMonth(from.getMonth() - 3);</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >  const { _avg } = await prisma.penilaian.aggregate({</span>
-<span class="cstat-no" title="statement not covered" >    _avg: { nilai: true },</span>
-<span class="cstat-no" title="statement not covered" >    where: { karyawanId, createdAt: { gte: from } },</span>
-<span class="cstat-no" title="statement not covered" >  });</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >  return Number(_avg.nilai ?? 0);</span>
-<span class="cstat-no" title="statement not covered" >};</span>
+const calcRollingAvg = async (prisma, karyawanId) =&gt; {
+  const from = new Date();
+  from.setMonth(from.getMonth() - 3);
 &nbsp;
-const toGrade = (<span class="fstat-no" title="function not covered" >avg) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  const match = THRESHOLDS.find((t) =&gt; avg &gt;= t.min);</span>
-<span class="cstat-no" title="statement not covered" >  return match ? match.grade : "N/A"; // bisa juga null, atau "?" tergantung preferensimu</span>
-<span class="cstat-no" title="statement not covered" >};</span>
+  const { _avg } = await prisma.penilaian.aggregate({
+    _avg: { nilai: true },
+    where: { karyawanId, createdAt: { gte: from } },
+  });
+&nbsp;
+  return Number(_avg.nilai ?? 0);
+};
+&nbsp;
+const toGrade = (avg) =&gt; {
+  const match = THRESHOLDS.find((t) =&gt; avg &gt;= t.min);
+  return match ? match.grade : "N/A"; // bisa juga null, atau "?" tergantung preferensimu
+};
 &nbsp;
 module.exports = { calcRollingAvg, toGrade };
 &nbsp;</pre></td></tr></table></pre>
@@ -151,7 +151,7 @@ module.exports = { calcRollingAvg, toGrade };
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-06-15T10:36:23.263Z
+                at 2025-07-01T03:45:30.402Z
             </div>
         <script src="../prettify.js"></script>
         <script>

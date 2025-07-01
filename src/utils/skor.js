@@ -5,12 +5,13 @@ const prisma = new PrismaClient();
  * Hitung ulang skor karyawan berdasarkan
  * 6 (enam) bulan terakhir.
  * @param {number} karyawanId
+ * @param {object} prismaClient (opsional, untuk testing)
  */
-async function hitungSkor6Bulan(karyawanId) {
+async function hitungSkor6Bulan(karyawanId, prismaClient = prisma) {
   const cutoff = new Date();
   cutoff.setMonth(cutoff.getMonth() - 6); // 6 bulan ke belakang
 
-  const pen = await prisma.penilaian.findMany({
+  const pen = await prismaClient.penilaian.findMany({
     where: { karyawanId, createdAt: { gte: cutoff } },
     include: { kriteria: { include: { bobotKriteria: true } } },
   });
@@ -28,7 +29,7 @@ async function hitungSkor6Bulan(karyawanId) {
       Object.keys(byMonth).length
     : 0;
 
-  await prisma.karyawan.update({
+  await prismaClient.karyawan.update({
     where: { id: karyawanId },
     data: { skor: avg },
   });

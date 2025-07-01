@@ -1,3 +1,5 @@
+const karyawanController = require('../src/controllers/karyawanController');
+
 // Menggunakan require (CommonJS) bukan import (ESM)
 const {
   getAllKaryawan,
@@ -9,6 +11,7 @@ const {
 
 const { calcRollingAvg, toGrade } = require("../src/utils/score.js");
 const { PrismaClient } = require("@prisma/client");
+const { generateKaryawanReportPDF } = require('../src/services/reportService');
 
 // Mock dependensi
 // Mock paket @prisma/client secara keseluruhan
@@ -33,6 +36,9 @@ jest.mock("../src/utils/score.js", () => ({
   toGrade: jest.fn(),
 }));
 
+// Mock report service
+jest.mock('../src/services/reportService');
+
 // Buat instance mock prisma untuk digunakan di dalam tes
 const prisma = new PrismaClient();
 
@@ -45,6 +51,8 @@ describe("Karyawan Controller", () => {
     mockResponse = {
       json: jest.fn(),
       status: jest.fn(() => mockResponse),
+      setHeader: jest.fn(),
+      send: jest.fn(),
     };
     mockNext = jest.fn();
   });
@@ -203,6 +211,43 @@ describe("Karyawan Controller", () => {
       expect(mockResponse.json).toHaveBeenCalledWith({
         message: "Tidak ada field di‑update",
       });
+    });
+  });
+
+  describe('downloadLaporanKaryawan', () => {
+    it('berhasil download PDF', async () => {
+      prisma.karyawan.findUnique.mockResolvedValue({
+        id: 6,
+        nama: 'E F',
+        penilaian: [],
+      });
+      generateKaryawanReportPDF.mockResolvedValue(Buffer.from('pdf'));
+      mockRequest.params.id = '6';
+      await karyawanController.downloadLaporanKaryawan(mockRequest, mockResponse, mockNext);
+      expect(mockResponse.setHeader).toHaveBeenCalledWith('Content-Type', 'application/pdf');
+      expect(mockResponse.setHeader).toHaveBeenCalledWith(
+        'Content-Disposition',
+        expect.stringContaining('Laporan_Kinerja_E_F.pdf')
+      );
+      expect(mockResponse.send).toHaveBeenCalledWith(expect.any(Buffer));
+    });
+    it('id tidak valid', async () => {
+      mockRequest.params.id = 'abc';
+      await karyawanController.downloadLaporanKaryawan(mockRequest, mockResponse, mockNext);
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+    });
+    it('karyawan tidak ditemukan', async () => {
+      prisma.karyawan.findUnique.mockResolvedValue(null);
+      mockRequest.params.id = '99';
+      await karyawanController.downloadLaporanKaryawan(mockRequest, mockResponse, mockNext);
+      expect(mockResponse.status).toHaveBeenCalledWith(404);
+    });
+    it('menangani error', async () => {
+      const error = new Error('fail');
+      prisma.karyawan.findUnique.mockRejectedValue(error);
+      mockRequest.params.id = '1';
+      await karyawanController.downloadLaporanKaryawan(mockRequest, mockResponse, mockNext);
+      expect(mockNext).toHaveBeenCalled();
     });
   });
 });
