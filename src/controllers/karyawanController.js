@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const { calcRollingAvg, toGrade } = require("../utils/score.js");
+const { generateKaryawanReportPDF } = require("../services/reportService.js");
 
 const prisma = new PrismaClient();
 
@@ -94,6 +95,47 @@ exports.updateKaryawan = async (req, res, next) => {
       return res.status(409).json({ message: "Email sudah dipakai" });
     if (err.code === "P2025")
       return res.status(404).json({ message: "Karyawan tidak ditemukan" });
+    next(err);
+  }
+};
+
+
+exports.downloadLaporanKaryawan = async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ message: "ID karyawan tidak valid" });
+  }
+
+  try {
+    // 1. Ambil data karyawan beserta semua penilaiannya
+    const karyawan = await prisma.karyawan.findUnique({
+      where: { id },
+      include: {
+        penilaian: {
+          orderBy: { createdAt: "asc" }, // Urutkan dari yang paling lama
+          include: {
+            kriteria: { select: { nama: true } },
+          },
+        },
+      },
+    });
+
+    // 2. Handle jika karyawan tidak ditemukan
+    if (!karyawan) {
+      return res.status(404).json({ message: "Karyawan tidak ditemukan" });
+    }
+
+    // 3. Panggil service untuk membuat PDF dalam bentuk buffer
+    const pdfBuffer = await generateKaryawanReportPDF(karyawan);
+
+    // 4. Atur header response untuk men-trigger download file di browser
+    const filename = `Laporan_Kinerja_${karyawan.nama.replace(/ /g, "_")}.pdf`;
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+    // 5. Kirim buffer PDF sebagai respons
+    res.send(pdfBuffer);
+  } catch (err) {
     next(err);
   }
 };

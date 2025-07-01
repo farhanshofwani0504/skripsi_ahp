@@ -15,9 +15,10 @@
   "description": "",
   "dependencies": {
     "@faker-js/faker": "^9.7.0",
-    "@prisma/client": "^6.6.0",
+    "@prisma/client": "^6.10.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "fs-extra": "^11.3.0",
@@ -26,6 +27,7 @@
     "nodemon": "^3.1.10",
     "path": "^0.12.7",
     "pdfkit": "^0.17.1",
+    "pdfkit-table": "^0.1.99",
     "pg": "^8.15.5"
   },
   "devDependencies": {

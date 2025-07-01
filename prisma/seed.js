@@ -6,6 +6,7 @@ async function run() {
   await import('./seedKaryawan.js');
   await import('./seedPenilaian.js');
   await import('./seedBobotKriteria.js');
+  await import('./seedPenilaian.js')
 
 }
 
