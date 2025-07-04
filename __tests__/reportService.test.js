@@ -27,6 +27,10 @@ jest.mock("pdfkit-table", () => {
       moveDown: mockMoveDownFn.mockReturnThis(),
       table: mockTableFn,
       end: jest.fn(),
+      page: { // Tambahkan mock page object
+        height: 792, // Contoh tinggi halaman standar (Letter size)
+        margins: { bottom: 72 }, // Contoh margin bawah standar
+      },
     };
     
     // Simpan callback 'end' saat .on() dipanggil

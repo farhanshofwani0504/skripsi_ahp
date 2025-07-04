@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">96.49% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>106/106</span>
+                <span class='fraction'>110/114</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">90.9% </span>
+                <span class="strong">83.33% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>10/11</span>
+                <span class='fraction'>10/12</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">96.49% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>106/106</span>
+                <span class='fraction'>110/114</span>
             </div>
         
             
@@ -168,7 +168,15 @@
 <a name='L103'></a><a href='#L103'>103</a>
 <a name='L104'></a><a href='#L104'>104</a>
 <a name='L105'></a><a href='#L105'>105</a>
-<a name='L106'></a><a href='#L106'>106</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -250,6 +258,9 @@
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">5x</span>
@@ -259,8 +270,13 @@
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
@@ -353,7 +369,10 @@ exports.generateKaryawanReportPDF = (karyawan) =&gt; {
         // 2. Siapkan data untuk tabel
         const table = {
           title: bulan, // Judul tabel adalah nama bulan
-          headers: ["Kriteria", "Nilai"],
+          headers: [
+            { label: "Kriteria", width: 350 },
+            { label: "Nilai", width: 100 },
+          ],
           rows: assessments.map((p) =&gt; [
             p.kriteria.nama,
             p.nilai.toFixed(2),
@@ -361,11 +380,16 @@ exports.generateKaryawanReportPDF = (karyawan) =&gt; {
         };
 &nbsp;
         // 3. Gambar tabel menggunakan pdfkit-table
+        // Periksa apakah ada cukup ruang untuk tabel berikutnya
+        const tableHeightEstimate = assessments.length * 15 + 50; // Estimasi tinggi tabel (baris * tinggi_baris + tinggi_header)
+        if (doc.y + tableHeightEstimate &gt; doc.page.height - doc.page.margins.bottom) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >          doc.addPage();</span>
+<span class="cstat-no" title="statement not covered" >          doc.moveDown(); // Beri sedikit ruang di awal halaman baru</span>
+<span class="cstat-no" title="statement not covered" >        }</span>
         doc.table(table, {
           prepareHeader: <span class="fstat-no" title="function not covered" >() =&gt; doc.font("Helvetica-Bold").fontSize(10),</span>
           prepareRow: <span class="fstat-no" title="function not covered" >(row, indexColumn, indexRow, rectRow) =&gt;</span>
-            doc.font("Helvetica").fontSize(10),
-          width: 500,
+<span class="cstat-no" title="statement not covered" >            doc.font("Helvetica").fontSize(10),</span>
         });
 &nbsp;
         // 4. Tambahkan rekap di bawah tabel
@@ -385,7 +409,7 @@ exports.generateKaryawanReportPDF = (karyawan) =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-01T03:45:30.402Z
+                at 2025-07-04T03:34:15.710Z
             </div>
         <script src="../prettify.js"></script>
         <script>

@@ -1,13 +1,21 @@
-const { exec } = require('child_process');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 async function run() {
   console.log('\n⏳ Menjalankan semua seed...');
-  await import('./seedKriteria.js');
-  await import('./seedKaryawan.js');
-  await import('./seedPenilaian.js');
-  await import('./seedBobotKriteria.js');
-  await import('./seedPenilaian.js')
 
+  const { main: seedKriteria } = require('./seedKriteria.js');
+  const { main: seedKaryawan } = require('./seedKaryawan.js');
+  const { main: seedPenilaian } = require('./seedPenilaian.js');
+  const { main: seedBobotKriteria } = require('./seedBobotKriteria.js');
+
+  await seedKriteria();
+  await seedKaryawan();
+  await seedPenilaian();
+  await seedBobotKriteria();
+
+  await prisma.$disconnect();
+  console.log('✅ Semua seed selesai dijalankan.');
 }
 
-run();
+run().catch(console.error);

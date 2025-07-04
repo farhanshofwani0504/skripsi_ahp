@@ -78,7 +78,10 @@ exports.generateKaryawanReportPDF = (karyawan) => {
         // 2. Siapkan data untuk tabel
         const table = {
           title: bulan, // Judul tabel adalah nama bulan
-          headers: ["Kriteria", "Nilai"],
+          headers: [
+            { label: "Kriteria", width: 350 },
+            { label: "Nilai", width: 100 },
+          ],
           rows: assessments.map((p) => [
             p.kriteria.nama,
             p.nilai.toFixed(2),
@@ -86,11 +89,16 @@ exports.generateKaryawanReportPDF = (karyawan) => {
         };
 
         // 3. Gambar tabel menggunakan pdfkit-table
+        // Periksa apakah ada cukup ruang untuk tabel berikutnya
+        const tableHeightEstimate = assessments.length * 15 + 50; // Estimasi tinggi tabel (baris * tinggi_baris + tinggi_header)
+        if (doc.y + tableHeightEstimate > doc.page.height - doc.page.margins.bottom) {
+          doc.addPage();
+          doc.moveDown(); // Beri sedikit ruang di awal halaman baru
+        }
         doc.table(table, {
           prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10),
           prepareRow: (row, indexColumn, indexRow, rectRow) =>
             doc.font("Helvetica").fontSize(10),
-          width: 500,
         });
 
         // 4. Tambahkan rekap di bawah tabel

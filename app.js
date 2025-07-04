@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
 dotenv.config();
+console.log('FRONTEND_URL from .env:', process.env.FRONTEND_URL);
 const cors = require("cors");
 
 app.use(cors());

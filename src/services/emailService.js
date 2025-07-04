@@ -10,6 +10,17 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+exports.sendEmail = async (options) => {
+  const mailOptions = {
+    from: process.env.EMAIL_FROM,
+    to: options.email,
+    subject: options.subject,
+    html: options.message,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
 exports.sendCustomEmail = async (to, nama, jenisEmail) => {
   const lowerCaseJenis = jenisEmail.toLowerCase(); // Biar aman
 
@@ -60,3 +71,4 @@ exports.sendCustomEmailWithAttachment = async (
     ],
   });
 };
+
