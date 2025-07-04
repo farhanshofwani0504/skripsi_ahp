@@ -41,7 +41,7 @@ function generateLaporanPDF(karyawan, nilaiRata) {
   return filepath;
 }
 
-const kirimPemecatanMassal = async (req, res) => {
+const kirimNotifikasiMassal = async (req, res) => {
   try {
     const karyawanList = await prisma.karyawan.findMany();
     const result = [];
@@ -58,7 +58,10 @@ const kirimPemecatanMassal = async (req, res) => {
         penilaian.reduce((a, b) => a + b.nilai, 0) / (penilaian.length || 1);
       const grade = toGrade(rata2);
 
-      if (grade === "E" && k.email) {
+      if (grade === "D" && k.email) {
+        await sendCustomEmail(k.email, k.nama, "peringatan");
+        result.push({ nama: k.nama, status: "Email peringatan terkirim" });
+      } else if (grade === "E" && k.email) {
         const pdfPath = generateLaporanPDF(k, rata2);
         await sendCustomEmailWithAttachment(
           k.email,
@@ -67,11 +70,11 @@ const kirimPemecatanMassal = async (req, res) => {
           pdfPath
         );
 
-        result.push({ nama: k.nama, status: "Email dikirim" });
+        result.push({ nama: k.nama, status: "Email pemecatan terkirim" });
       }
     }
 
-    res.json({ message: "Notifikasi pemecatan terkirim", data: result });
+    res.json({ message: "Notifikasi massal terkirim", data: result });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -85,10 +88,10 @@ const kirimEmailKaryawan = async (req, res) => {
       where: { id: karyawanId },
     });
 
-    if (!karyawan || !karyawan.email) {
+    if (!karyawan || !karyawan.email || karyawan.email.trim() === "") {
       return res
         .status(404)
-        .json({ error: "Karyawan atau email tidak ditemukan" });
+        .json({ error: "Karyawan tidak ditemukan atau tidak memiliki alamat email yang valid" });
     }
 
     await sendCustomEmail(karyawan.email, karyawan.nama, jenisEmail);
@@ -114,7 +117,7 @@ const kirimPeringatan = async (req, res) => {
 
 // PASTIKAN BLOK INI ADA DI PALING BAWAH
 module.exports = {
-  kirimPemecatanMassal,
+  kirimNotifikasiMassal,
   kirimEmailKaryawan,
   kirimPeringatan,
 };

@@ -3,9 +3,11 @@ const prisma = new PrismaClient();
 
 async function main() {
   const bobotAHP = {
-    Disiplin: 0.26,
-    Produktivitas: 0.63,
-    Kerjasama: 0.11
+    Disiplin: 0.2,
+    Produktivitas: 0.2,
+    Kerjasama: 0.2,
+    "Kualitas Hasil Kerja": 0.2,
+    "Inisiatif dan Proaktif": 0.2
   };
 
   const kriteria = await prisma.kriteria.findMany();

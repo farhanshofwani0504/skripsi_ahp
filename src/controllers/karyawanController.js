@@ -139,3 +139,69 @@ exports.downloadLaporanKaryawan = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.downloadGradesExcel = async (_req, res, next) => {
+  try {
+    const list = await prisma.karyawan.findMany({ orderBy: { id: "asc" } });
+
+    const data = await Promise.all(
+      list.map(async (k) => {
+        const avg3m = await calcRollingAvg(prisma, k.id);
+        return { 
+          nama: k.nama,
+          posisi: k.posisi,
+          email: k.email || '-',
+          rollingAvg: avg3m.toFixed(2),
+          grade: toGrade(avg3m) 
+        };
+      })
+    );
+
+    // Create CSV header
+    const csvHeader = "Nama,Posisi,Email,Rata-rata Nilai,Grade\n";
+
+    // Create CSV rows
+    const csvRows = data.map(row => 
+      `"${row.nama}","${row.posisi}","${row.email}","${row.rollingAvg}","${row.grade}"`
+    ).join("\n");
+
+    const csvContent = csvHeader + csvRows;
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=\"laporan_grade_karyawan.csv\"");
+    res.send(csvContent);
+
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.downloadRawScoresExcel = async (_req, res, next) => {
+  try {
+    const penilaianData = await prisma.penilaian.findMany({
+      include: {
+        karyawan: { select: { nama: true, posisi: true, email: true } },
+        kriteria: { select: { nama: true } },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    // Create CSV header
+    const csvHeader = "Nama Karyawan,Posisi,Email,Nama Kriteria,Nilai,Tanggal Penilaian\n";
+
+    // Create CSV rows
+    const csvRows = penilaianData.map(p => {
+      const tanggal = p.createdAt ? p.createdAt.toISOString().split('T')[0] : '';
+      return `"${p.karyawan.nama}","${p.karyawan.posisi}","${p.karyawan.email || '-'}","${p.kriteria.nama}","${p.nilai}","${tanggal}"`;
+    }).join("\n");
+
+    const csvContent = csvHeader + csvRows;
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=\"laporan_nilai_mentah.csv\"");
+    res.send(csvContent);
+
+  } catch (err) {
+    next(err);
+  }
+};

@@ -7,6 +7,9 @@ const {
   addKaryawan,
   deleteKaryawan,
   updateKaryawan,
+  downloadLaporanKaryawan,
+  downloadGradesExcel,
+  downloadRawScoresExcel,
 } = require("../src/controllers/karyawanController.js");
 
 const { calcRollingAvg, toGrade } = require("../src/utils/score.js");
@@ -23,6 +26,9 @@ jest.mock("@prisma/client", () => {
       create: jest.fn(),
       delete: jest.fn(),
       update: jest.fn(),
+    },
+    penilaian: {
+      findMany: jest.fn(),
     },
   };
   return {
@@ -61,8 +67,8 @@ describe("Karyawan Controller", () => {
   describe("getAllKaryawan", () => {
     test("harus mengembalikan daftar karyawan dengan rolling average dan grade", async () => {
       const mockKaryawanList = [
-        { id: 1, nama: "Adi" },
-        { id: 2, nama: "Budi" },
+        { id: 1, nama: "Adi", email: "adi@example.com", posisi: "Dev" },
+        { id: 2, nama: "Budi", email: "budi@example.com", posisi: "QA" },
       ];
       prisma.karyawan.findMany.mockResolvedValue(mockKaryawanList);
       calcRollingAvg.mockResolvedValue(85);
@@ -76,8 +82,8 @@ describe("Karyawan Controller", () => {
       expect(calcRollingAvg).toHaveBeenCalledTimes(2);
       expect(toGrade).toHaveBeenCalledTimes(2);
       expect(mockResponse.json).toHaveBeenCalledWith([
-        { id: 1, nama: "Adi", rollingAvg: 85, grade: "A" },
-        { id: 2, nama: "Budi", rollingAvg: 85, grade: "A" },
+        { id: 1, nama: "Adi", email: "adi@example.com", posisi: "Dev", rollingAvg: 85, grade: "A" },
+        { id: 2, nama: "Budi", email: "budi@example.com", posisi: "QA", rollingAvg: 85, grade: "A" },
       ]);
     });
 
@@ -126,6 +132,14 @@ describe("Karyawan Controller", () => {
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       expect(mockResponse.json).toHaveBeenCalledWith({ message: "ID invalid" });
     });
+
+    test("harus memanggil next(err) jika terjadi error", async () => {
+      mockRequest.params.id = "1";
+      const error = new Error("DB Error");
+      prisma.karyawan.findUnique.mockRejectedValue(error);
+      await getKaryawanById(mockRequest, mockResponse, mockNext);
+      expect(mockNext).toHaveBeenCalledWith(error);
+    });
   });
 
   // --- Tes untuk addKaryawan ---
@@ -156,6 +170,16 @@ describe("Karyawan Controller", () => {
         message: "email sudah dipakai",
       });
     });
+
+    test("harus memanggil next(err) jika terjadi error lain", async () => {
+      const error = new Error("Generic DB Error");
+      prisma.karyawan.create.mockRejectedValue(error);
+      mockRequest.body = { nama: "Cici", posisi: "QA" };
+
+      await addKaryawan(mockRequest, mockResponse, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(error);
+    });
   });
 
   // --- Tes untuk deleteKaryawan ---
@@ -180,6 +204,14 @@ describe("Karyawan Controller", () => {
         message: "karyawan tidak ditemukan",
       });
     });
+
+    test("harus memanggil next(err) jika terjadi error lain", async () => {
+      mockRequest.params.id = "1";
+      const error = new Error("Generic DB Error");
+      prisma.karyawan.delete.mockRejectedValue(error);
+      await deleteKaryawan(mockRequest, mockResponse, mockNext);
+      expect(mockNext).toHaveBeenCalledWith(error);
+    });
   });
 
   // --- Tes untuk updateKaryawan ---
@@ -203,6 +235,30 @@ describe("Karyawan Controller", () => {
       expect(mockResponse.json).toHaveBeenCalledWith(updatedKaryawan);
     });
 
+    test("harus mengembalikan 409 jika email sudah dipakai (P2002)", async () => {
+      mockRequest.params.id = "1";
+      mockRequest.body = { email: "existing@mail.com" };
+      const error = { code: "P2002", meta: { target: ["email"] } };
+      prisma.karyawan.update.mockRejectedValue(error);
+
+      await updateKaryawan(mockRequest, mockResponse, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(409);
+      expect(mockResponse.json).toHaveBeenCalledWith({ message: "Email sudah dipakai" });
+    });
+
+    test("harus mengembalikan 404 jika karyawan tidak ditemukan saat update (P2025)", async () => {
+      mockRequest.params.id = "99";
+      mockRequest.body = { nama: "Test" };
+      const error = { code: "P2025" };
+      prisma.karyawan.update.mockRejectedValue(error);
+
+      await updateKaryawan(mockRequest, mockResponse, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(404);
+      expect(mockResponse.json).toHaveBeenCalledWith({ message: "Karyawan tidak ditemukan" });
+    });
+
     test("harus mengembalikan 400 jika tidak ada field yang diupdate", async () => {
       mockRequest.params.id = "1";
       mockRequest.body = {}; // Body kosong
@@ -211,6 +267,17 @@ describe("Karyawan Controller", () => {
       expect(mockResponse.json).toHaveBeenCalledWith({
         message: "Tidak ada field di‑update",
       });
+    });
+
+    test("harus memanggil next(err) jika terjadi error lain", async () => {
+      mockRequest.params.id = "1";
+      const error = new Error("Generic DB Error");
+      prisma.karyawan.update.mockRejectedValue(error);
+      mockRequest.body = { nama: "Test" };
+
+      await updateKaryawan(mockRequest, mockResponse, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(error);
     });
   });
 
@@ -248,6 +315,78 @@ describe("Karyawan Controller", () => {
       mockRequest.params.id = '1';
       await karyawanController.downloadLaporanKaryawan(mockRequest, mockResponse, mockNext);
       expect(mockNext).toHaveBeenCalled();
+    });
+  });
+
+  describe('downloadGradesExcel', () => {
+    test('harus berhasil mengunduh CSV grade karyawan', async () => {
+      const mockKaryawanList = [
+        { id: 1, nama: "Adi", email: "adi@example.com", posisi: "Dev" },
+        { id: 2, nama: "Budi", email: "budi@example.com", posisi: "QA" },
+      ];
+      prisma.karyawan.findMany.mockResolvedValue(mockKaryawanList);
+      calcRollingAvg.mockResolvedValueOnce(4.8).mockResolvedValueOnce(3.2);
+      toGrade.mockReturnValueOnce("A").mockReturnValueOnce("B");
+
+      await downloadGradesExcel(mockRequest, mockResponse, mockNext);
+
+      const expectedCsv = 
+        "Nama,Posisi,Email,Rata-rata Nilai,Grade\n" +
+        "\"Adi\",\"Dev\",\"adi@example.com\",\"4.80\",\"A\"\n" +
+        "\"Budi\",\"QA\",\"budi@example.com\",\"3.20\",\"B\"";
+
+      expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Type", "text/csv");
+      expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Disposition", "attachment; filename=\"laporan_grade_karyawan.csv\"");
+      expect(mockResponse.send).toHaveBeenCalledWith(expectedCsv);
+    });
+
+    test('harus memanggil next(err) jika terjadi error', async () => {
+      const error = new Error("DB Error");
+      prisma.karyawan.findMany.mockRejectedValue(error);
+
+      await downloadGradesExcel(mockRequest, mockResponse, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe('downloadRawScoresExcel', () => {
+    test('harus berhasil mengunduh CSV nilai mentah', async () => {
+      const mockPenilaianData = [
+        {
+          karyawan: { nama: "Adi", posisi: "Dev", email: "adi@example.com" },
+          kriteria: { nama: "Disiplin" },
+          nilai: 4.5,
+          createdAt: new Date("2024-01-01"),
+        },
+        {
+          karyawan: { nama: "Budi", posisi: "QA", email: "budi@example.com" },
+          kriteria: { nama: "Produktivitas" },
+          nilai: 3.0,
+          createdAt: new Date("2024-01-02"),
+        },
+      ];
+      prisma.penilaian.findMany.mockResolvedValue(mockPenilaianData);
+
+      await downloadRawScoresExcel(mockRequest, mockResponse, mockNext);
+
+      const expectedCsv = 
+        "Nama Karyawan,Posisi,Email,Nama Kriteria,Nilai,Tanggal Penilaian\n" +
+        "\"Adi\",\"Dev\",\"adi@example.com\",\"Disiplin\",\"4.5\",\"2024-01-01\"\n" +
+        "\"Budi\",\"QA\",\"budi@example.com\",\"Produktivitas\",\"3\",\"2024-01-02\"";
+
+      expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Type", "text/csv");
+      expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Disposition", "attachment; filename=\"laporan_nilai_mentah.csv\"");
+      expect(mockResponse.send).toHaveBeenCalledWith(expectedCsv);
+    });
+
+    test('harus memanggil next(err) jika terjadi error', async () => {
+      const error = new Error("DB Error");
+      prisma.penilaian.findMany.mockRejectedValue(error);
+
+      await downloadRawScoresExcel(mockRequest, mockResponse, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(error);
     });
   });
 });

@@ -18,9 +18,9 @@ router.post(
 );
 
 router.post(
-  "/pemecatan",
+  "/notifikasi-massal",
   authMiddleware,
-  notifikasiController.kirimPemecatanMassal
+  notifikasiController.kirimNotifikasiMassal
 );
 
 module.exports = router;

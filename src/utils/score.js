@@ -1,12 +1,4 @@
 // src/utils/score.js
-const THRESHOLDS = [
-  { min: 4.5, grade: "A" },
-  { min: 3.5, grade: "B" },
-  { min: 2.5, grade: "C" },
-  { min: 1.5, grade: "D" },
-  { min: 1.0, grade: "E" }, // asumsi minimal skor AHP = 1
-];
-
 const calcRollingAvg = async (prisma, karyawanId) => {
   const from = new Date();
   from.setMonth(from.getMonth() - 3);
@@ -20,8 +12,12 @@ const calcRollingAvg = async (prisma, karyawanId) => {
 };
 
 const toGrade = (avg) => {
-  const match = THRESHOLDS.find((t) => avg >= t.min);
-  return match ? match.grade : "N/A"; // bisa juga null, atau "?" tergantung preferensimu
+  if (avg >= 4.5) return "A";
+  if (avg >= 3.5) return "B";
+  if (avg >= 2.5) return "C";
+  if (avg > 1.5) return "D"; // Diubah menjadi > 1.5 agar 1.5 masuk grade E
+  if (avg >= 0) return "E";   // Grade E untuk skor dari 0 hingga 1.5
+  return "N/A"; // Untuk skor negatif (seharusnya tidak terjadi)
 };
 
 module.exports = { calcRollingAvg, toGrade };

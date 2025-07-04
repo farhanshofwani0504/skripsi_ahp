@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   const existing = await prisma.kriteria.findMany();
-  const defaultKriteria = ['Disiplin', 'Produktivitas', 'Kerjasama'];
+  const defaultKriteria = ['Disiplin', 'Produktivitas', 'Kerjasama', 'Kualitas Hasil Kerja', 'Inisiatif dan Proaktif'];
 
   for (const nama of defaultKriteria) {
     const found = existing.find(k => k.nama === nama);

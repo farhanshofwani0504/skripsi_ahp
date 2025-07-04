@@ -1,11 +1,13 @@
 const express = require("express");
-const {
+const { 
   getAllKaryawan,
   addKaryawan,
   deleteKaryawan,
   updateKaryawan,
   getKaryawanById,
-  downloadLaporanKaryawan
+  downloadLaporanKaryawan,
+  downloadGradesExcel,
+  downloadRawScoresExcel
 } = require("../controllers/karyawanController"); // ← controller juga CJS
 
 const router = express.Router();
@@ -17,5 +19,7 @@ router.delete("/:id", deleteKaryawan);
 router.patch("/:id", updateKaryawan);
 router.put("/:id", updateKaryawan);
 router.get("/:id/report", downloadLaporanKaryawan);
+router.get("/grades/excel", downloadGradesExcel);
+router.get("/raw-scores/excel", downloadRawScoresExcel);
 
 module.exports = router;

@@ -1,3 +1,17 @@
 node_modules
 # Keep environment variables out of version control
 .env
+
+# Log files
+*.log
+npm-debug.log*
+
+# Build and coverage output
+coverage/
+dist/
+
+# macOS specific
+.DS_Store
+
+# Temporary files
+tmp/
