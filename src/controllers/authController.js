@@ -45,7 +45,9 @@ exports.login = async (req, res) => {
       expiresIn: '1d'
     });
 
-    res.json({ message: 'Login sukses', token });
+    const responseData = { message: 'Login sukses', token, user: { username: user.username, email: user.email, role: user.role } };
+    console.log("Login Response Data:", responseData);
+    res.json(responseData);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

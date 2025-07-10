@@ -43,38 +43,46 @@ function generateLaporanPDF(karyawan, nilaiRata) {
 
 const kirimNotifikasiMassal = async (req, res) => {
   try {
-    const karyawanList = await prisma.karyawan.findMany();
+    const karyawanList = await prisma.karyawan.findMany({
+      include: {
+        penilaian: {
+          include: {
+            kriteria: { select: { nama: true } },
+          },
+        },
+      },
+    });
     const result = [];
 
     for (const k of karyawanList) {
       const from = new Date();
       from.setMonth(from.getMonth() - 3);
 
-      const penilaian = await prisma.penilaian.findMany({
-        where: { karyawanId: k.id, createdAt: { gte: from } },
-      });
+      const penilaian = k.penilaian.filter(p => new Date(p.createdAt) >= from);
 
       const rata2 =
         penilaian.reduce((a, b) => a + b.nilai, 0) / (penilaian.length || 1);
       const grade = toGrade(rata2);
 
       if (grade === "D" && k.email) {
-        await sendCustomEmail(k.email, k.nama, "peringatan");
+        const pdfPath = generateLaporanPDF(k, penilaian, "[Nama Owner/HRD]"); // Ganti dengan nama owner yang sebenarnya
+        await sendCustomEmail(k.email, k.nama, "peringatan", penilaian);
         result.push({ nama: k.nama, status: "Email peringatan terkirim" });
       } else if (grade === "E" && k.email) {
-        const pdfPath = generateLaporanPDF(k, rata2);
+        const pdfPath = generateLaporanPDF(k, penilaian, "[Nama Owner/HRD]"); // Ganti dengan nama owner yang sebenarnya
         await sendCustomEmailWithAttachment(
           k.email,
           k.nama,
           "pemecatan",
-          pdfPath
+          pdfPath,
+          penilaian,
+          "[Nama Owner/HRD]" // Ganti dengan nama owner yang sebenarnya
         );
-
         result.push({ nama: k.nama, status: "Email pemecatan terkirim" });
       }
     }
 
-    res.json({ message: "Notifikasi massal terkirim", data: result });
+    res.json({ message: "Notifikasi pemecatan selesai", data: result });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -94,7 +102,17 @@ const kirimEmailKaryawan = async (req, res) => {
         .json({ error: "Karyawan tidak ditemukan atau tidak memiliki alamat email yang valid" });
     }
 
-    await sendCustomEmail(karyawan.email, karyawan.nama, jenisEmail);
+    const from = new Date();
+    from.setMonth(from.getMonth() - 3);
+
+    const penilaian = await prisma.penilaian.findMany({
+      where: { karyawanId: karyawan.id, createdAt: { gte: from } },
+    });
+
+    const rata2 =
+      penilaian.reduce((a, b) => a + b.nilai, 0) / (penilaian.length || 1);
+
+    await sendCustomEmail(karyawan.email, karyawan.nama, jenisEmail, penilaian);
 
     res.json({
       message: `Email ${jenisEmail} berhasil dikirim ke ${karyawan.nama}`,

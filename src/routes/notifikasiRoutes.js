@@ -18,7 +18,7 @@ router.post(
 );
 
 router.post(
-  "/notifikasi-massal",
+  "/pemecatan",
   authMiddleware,
   notifikasiController.kirimNotifikasiMassal
 );

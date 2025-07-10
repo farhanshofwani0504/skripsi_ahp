@@ -36,12 +36,6 @@ exports.generateKaryawanReportPDF = (karyawan) => {
     doc.text(`Nama: ${karyawan.nama}`);
     doc.text(`Posisi: ${karyawan.posisi}`);
     doc.text(`Email: ${karyawan.email || "-"}`);
-    doc.text(
-      `Tanggal Bergabung: ${format(
-        new Date(karyawan.startDate),
-        "dd MMMM yyyy"
-      )}`
-    );
     doc.moveDown(2);
 
     // Detail Penilaian per Bulan
