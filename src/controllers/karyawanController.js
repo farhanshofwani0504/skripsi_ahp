@@ -289,47 +289,7 @@ exports.downloadRawScoresExcel = async (_req, res, next) => {
   }
 };
 
-// Function to generate PDF for termination letter
-function generateTerminationLetterPDF(karyawan, penilaianData, ownerName = "Tim HRD") {
-  const filename = `Laporan_Kinerja_${karyawan.nama.replace(/ /g, "_")}.pdf`;
-  const publicDir = path.join(__dirname, "../../public");
-  const filepath = path.join(publicDir, filename);
 
-  if (!fs.existsSync(publicDir)) {
-    fs.mkdirSync(publicDir, { recursive: true });
-  }
-
-  const doc = new PDFDocument();
-  doc.pipe(fs.createWriteStream(filepath));
-
-  doc.fontSize(18).text("Laporan Kinerja Karyawan", { align: "center" });
-  doc.moveDown();
-  doc.fontSize(12).text(`Nama      : ${karyawan.nama}`);
-  doc.text(`Posisi    : ${karyawan.posisi}`);
-  doc.text(`Email     : ${karyawan.email}`);
-  doc.moveDown();
-
-  doc.fontSize(14).text("Detail Penilaian:");
-  let totalNilai = 0;
-  if (penilaianData && penilaianData.length > 0) {
-    penilaianData.forEach((p) => {
-      const date = new Date(p.createdAt).toLocaleDateString('id-ID');
-      doc.text(`- Tanggal: ${date}, Kriteria: ${p.kriteria.nama}, Nilai: ${p.nilai}`);
-      totalNilai += p.nilai;
-    });
-    const rata2Nilai = totalNilai / penilaianData.length;
-    doc.text(`\nTotal Nilai: ${totalNilai.toFixed(2)}`);
-    doc.text(`Rata-rata Nilai: ${rata2Nilai.toFixed(2)}`);
-  } else {
-    doc.text("Tidak ada data penilaian yang tersedia.");
-  }
-
-  doc.moveDown();
-  doc.text(`Hormat kami,\n${ownerName}, ${new Date().toLocaleDateString('id-ID')}`);
-
-  doc.end();
-  return filepath;
-}
 
 exports.pemecatanKaryawanById = async (req, res, next) => {
   const id = Number(req.params.id);
