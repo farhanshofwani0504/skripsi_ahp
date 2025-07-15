@@ -18,6 +18,7 @@ model Karyawan {
   updatedAt   DateTime  @updatedAt
   penilaian   Penilaian[]
   warningLogs WarningLog[]
+  proposalKontrak ProposalKontrak[]
 }
 
 
@@ -62,12 +63,46 @@ model WarningLog {
   karyawan    Karyawan   @relation(fields: [karyawanId], references: [id], onDelete: Cascade)
 }
 
+enum Role {
+  ADMIN
+  OWNER
+}
+
 model User {
   id                   Int       @id @default(autoincrement())
   username             String    @unique
   email                String    @unique
   password             String
-  role                 String?
+  role                 Role?
   resetPasswordToken   String?
   resetPasswordExpires DateTime?
+  proposalDibuat       ProposalKontrak[] @relation("UserProposal")
+}
+
+enum JenisProposal {
+  PERPANJANGAN
+  PEMUTUSAN
+}
+
+enum StatusProposal {
+  PENDING
+  DISETUJUI
+  DITOLAK
+}
+
+model ProposalKontrak {
+  id                Int            @id @default(autoincrement())
+  karyawanId        Int
+  karyawan          Karyawan       @relation(fields: [karyawanId], references: [id], onDelete: Cascade)
+  jenis             JenisProposal
+  alasan            String
+  tanggalPengajuan  DateTime       @default(now())
+  status            StatusProposal @default(PENDING)
+  tanggalKeputusan  DateTime?
+  catatanOwner      String?
+  tanggalMulaiBaru  DateTime?      // Untuk perpanjangan
+  tanggalAkhirBaru  DateTime?      // Untuk perpanjangan
+  createdBy         Int            // User (ADMIN) yang mengajukan
+  createdByUser     User           @relation("UserProposal", fields: [createdBy], references: [id], onDelete: Cascade)
+  updatedAt         DateTime       @updatedAt
 }

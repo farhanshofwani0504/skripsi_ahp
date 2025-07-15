@@ -18,6 +18,8 @@ const rankingRoutes = require("./src/routes/rankingRoutes");
 const dashboardRoutes = require("./src/routes/dashboardRoutes");
 const notifikasiRoutes = require("./src/routes/notifikasiRoutes");
 const bobotRoutes = require("./src/routes/bobot");
+const userRoutes = require("./src/routes/userRoutes");
+const proposalRoutes = require("./src/routes/proposalRoutes");
 // Use routes
 app.use("/api/notifikasi", notifikasiRoutes);
 app.use("/api/dashboard", dashboardRoutes);
@@ -28,6 +30,8 @@ app.use("/api/kriteria", kriteriaRoutes);
 app.use("/api/penilaian", penilaianRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/bobot", bobotRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/proposal", proposalRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
