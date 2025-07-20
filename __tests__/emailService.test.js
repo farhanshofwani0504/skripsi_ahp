@@ -79,7 +79,7 @@ describe("Email Service", () => {
       expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           to: "test@example.com",
-          subject: "Surat Pemecatan",
+          subject: "Pemberitahuan Pemutusan Hubungan Kerja",
           attachments: expect.arrayContaining([
             expect.objectContaining({
               filename: "fake_report.pdf",

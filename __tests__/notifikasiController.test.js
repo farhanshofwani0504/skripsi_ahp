@@ -1,6 +1,6 @@
 // Impor fungsi yang akan diuji
 const {
-  kirimPemecatanMassal,
+  kirimNotifikasiMassal,
   kirimEmailKaryawan,
   kirimPeringatan,
 } = require("../src/controllers/notifikasiController.js");
@@ -59,21 +59,24 @@ describe("Notifikasi Controller", () => {
   });
 
   // --- Tes untuk kirimPemecatanMassal ---
-  describe("kirimPemecatanMassal", () => {
+  describe("kirimNotifikasiMassal", () => {
     test("harus mengirim email pemecatan hanya kepada karyawan dengan grade E", async () => {
       const karyawanList = [
-        { id: 1, nama: "Budi", email: "budi@example.com" }, // Akan dipecat
-        { id: 2, nama: "Ani", email: "ani@example.com" }, // Aman
+        {
+          id: 1,
+          nama: "Budi",
+          email: "budi@example.com",
+          penilaian: [{ nilai: 1.2, createdAt: new Date() }], // Mock penilaian data for Budi
+        },
+        {
+          id: 2,
+          nama: "Ani",
+          email: "ani@example.com",
+          penilaian: [{ nilai: 3.0, createdAt: new Date() }], // Mock penilaian data for Ani
+        },
       ];
-      // Mock data untuk Budi (grade E)
-      const penilaianBudi = [{ nilai: 40 }];
-      // Mock data untuk Ani (grade C)
-      const penilaianAni = [{ nilai: 75 }];
 
       prisma.karyawan.findMany.mockResolvedValue(karyawanList);
-      prisma.penilaian.findMany
-        .mockResolvedValueOnce(penilaianBudi) // Panggilan pertama untuk Budi
-        .mockResolvedValueOnce(penilaianAni); // Panggilan kedua untuk Ani
 
       toGrade
         .mockReturnValueOnce("E") // Panggilan pertama untuk Budi
@@ -81,7 +84,7 @@ describe("Notifikasi Controller", () => {
 
       sendCustomEmailWithAttachment.mockResolvedValue();
 
-      await kirimPemecatanMassal(mockRequest, mockResponse);
+      await kirimNotifikasiMassal(mockRequest, mockResponse);
 
       // Pastikan PDF dan email hanya dibuat untuk Budi
       expect(PDFDocument).toHaveBeenCalledTimes(1);
@@ -90,20 +93,22 @@ describe("Notifikasi Controller", () => {
         "budi@example.com",
         "Budi",
         "pemecatan",
-        expect.any(String)
+        expect.any(String),
+        expect.any(Array),
+        "[Nama Owner/HRD]"
       );
 
       // Cek respon akhir
       expect(mockResponse.json).toHaveBeenCalledWith({
-        message: "Notifikasi pemecatan terkirim",
-        data: [{ nama: "Budi", status: "Email dikirim" }],
+        message: "Notifikasi pemecatan selesai",
+        data: [{ nama: "Budi", status: "Email pemecatan terkirim" }],
       });
     });
 
     test("harus mengembalikan status 500 jika terjadi error", async () => {
       const error = new Error("Prisma find failed");
       prisma.karyawan.findMany.mockRejectedValue(error);
-      await kirimPemecatanMassal(mockRequest, mockResponse);
+      await kirimNotifikasiMassal(mockRequest, mockResponse);
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(mockResponse.json).toHaveBeenCalledWith({ error: error.message });
     });
@@ -115,6 +120,7 @@ describe("Notifikasi Controller", () => {
       const karyawan = { id: 1, nama: "Cici", email: "cici@example.com" };
       mockRequest.body = { karyawanId: 1, jenisEmail: "apresiasi" };
       prisma.karyawan.findUnique.mockResolvedValue(karyawan);
+      prisma.penilaian.findMany.mockResolvedValue([]); // Add this line
       sendCustomEmail.mockResolvedValue();
 
       await kirimEmailKaryawan(mockRequest, mockResponse);
@@ -122,7 +128,8 @@ describe("Notifikasi Controller", () => {
       expect(sendCustomEmail).toHaveBeenCalledWith(
         "cici@example.com",
         "Cici",
-        "apresiasi"
+        "apresiasi",
+        expect.any(Array) // We expect the penilaian array to be passed
       );
       expect(mockResponse.json).toHaveBeenCalledWith({
         message: `Email apresiasi berhasil dikirim ke Cici`,
@@ -135,7 +142,7 @@ describe("Notifikasi Controller", () => {
       await kirimEmailKaryawan(mockRequest, mockResponse);
       expect(mockResponse.status).toHaveBeenCalledWith(404);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        error: "Karyawan atau email tidak ditemukan",
+        error: "Karyawan tidak ditemukan atau tidak memiliki alamat email yang valid",
       });
     });
   });

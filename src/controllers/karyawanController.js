@@ -291,127 +291,7 @@ exports.downloadRawScoresExcel = async (_req, res, next) => {
 
 
 
-exports.pemecatanKaryawanById = async (req, res, next) => {
-  const id = Number(req.params.id);
-  if (Number.isNaN(id)) {
-    return res.status(400).json({ message: "ID karyawan tidak valid" });
-  }
 
-  try {
-    const karyawan = await prisma.karyawan.findUnique({
-      where: { id },
-      include: {
-        penilaian: {
-          orderBy: { createdAt: "asc" },
-          include: {
-            kriteria: { select: { nama: true } },
-          },
-        },
-      },
-    });
-
-    if (!karyawan) {
-      return res.status(404).json({ message: "Karyawan tidak ditemukan" });
-    }
-
-    if (!karyawan.email || karyawan.email.trim() === "") {
-      return res.status(400).json({ message: "Karyawan tidak memiliki alamat email yang valid untuk pengiriman notifikasi." });
-    }
-
-    // Ambil semua penilaian (tanpa filter 3 bulan terakhir)
-    const penilaianTerbaru = karyawan.penilaian;
-
-    // Buat PDF laporan kinerja
-    const pdfPath = generateLaporanPDF(karyawan, penilaianTerbaru, "[Nama Owner/HRD]"); // Ganti dengan nama owner yang sebenarnya
-
-    // Kirim email pemecatan dengan lampiran
-    await sendCustomEmailWithAttachment(
-      karyawan.email,
-      karyawan.nama,
-      "pemecatan",
-      pdfPath,
-      penilaianTerbaru,
-      "[Nama Owner/HRD]" // Ganti dengan nama owner yang sebenarnya
-    );
-
-    res.json({ message: `Email pemecatan berhasil dikirim ke ${karyawan.nama}`, karyawanId: id });
-
-  } catch (err) {
-    next(err);
-  }
-};
-
-// Function to generate PDF report for termination
-function generateLaporanPDF(karyawan, penilaianData, ownerName = "Tim HRD") {
-  const filename = `Surat_Pemecatan_${karyawan.nama.replace(/ /g, "_")}.pdf`;
-  const publicDir = path.join(__dirname, "../../public");
-  const filepath = path.join(publicDir, filename);
-
-  if (!fs.existsSync(publicDir)) {
-    fs.mkdirSync(publicDir, { recursive: true });
-  }
-
-  const doc = new PDFDocument({ margin: 40 });
-  doc.pipe(fs.createWriteStream(filepath));
-
-  // HEADER
-  doc.fontSize(16).text("SURAT PEMECATAN KARYAWAN", { align: "center", underline: true });
-  doc.moveDown(1);
-
-  // Data Karyawan
-  doc.fontSize(10)
-    .text(`Nama   : ${karyawan.nama}`)
-    .text(`Posisi : ${karyawan.posisi}`)
-    .text(`Email  : ${karyawan.email}`);
-  doc.moveDown(1);
-
-  // Paragraf isi surat pemecatan
-  doc.fontSize(10).text(
-    `Dengan hormat,\n\nBerdasarkan hasil evaluasi kinerja yang telah dilakukan selama 3 bulan terakhir, dengan sangat menyesal kami sampaikan bahwa kinerja Saudara/i ${karyawan.nama} dinilai belum memenuhi standar yang ditetapkan oleh perusahaan. Oleh karena itu, terhitung sejak tanggal surat ini, perusahaan memutuskan untuk mengakhiri hubungan kerja dengan Saudara/i.\n\nKami mengucapkan terima kasih atas kontribusi dan kerja sama yang telah diberikan selama ini. Kami berharap Saudara/i dapat menerima keputusan ini dengan lapang dada dan semoga sukses di masa yang akan datang.`,
-    { align: 'justify' }
-  );
-  doc.moveDown(1);
-
-  // Tabel Penilaian
-  doc.fontSize(11).text("Detail Penilaian:", { underline: true });
-  doc.moveDown(0.5);
-
-  // Table Header
-  const tableTop = doc.y;
-  const col1 = 40, col2 = 180, col3 = 400;
-  doc.font("Helvetica-Bold").fontSize(10);
-  doc.text("Tanggal", col1, tableTop);
-  doc.text("Kriteria", col2, tableTop);
-  doc.text("Nilai", col3, tableTop);
-  doc.moveDown(0.5);
-  doc.font("Helvetica").fontSize(10);
-
-  let totalNilai = 0;
-  if (penilaianData && penilaianData.length > 0) {
-    penilaianData.forEach((p) => {
-      const y = doc.y;
-      const date = new Date(p.createdAt).toLocaleDateString('id-ID');
-      doc.text(date, col1, y);
-      doc.text(p.kriteria.nama, col2, y);
-      doc.text(p.nilai.toFixed(2), col3, y);
-      totalNilai += p.nilai;
-      doc.moveDown(0.2);
-    });
-    const rata2Nilai = totalNilai / penilaianData.length;
-    doc.moveDown(1);
-    doc.font("Helvetica-Bold").fontSize(10).text(`Total Nilai: ${totalNilai.toFixed(2)}`);
-    doc.text(`Rata-rata Nilai: ${rata2Nilai.toFixed(2)}`);
-    doc.font("Helvetica");
-  } else {
-    doc.text("Tidak ada data penilaian yang tersedia.");
-  }
-
-  doc.moveDown(1);
-  doc.text(`Hormat kami,\n${ownerName}, ${new Date().toLocaleDateString('id-ID')}`);
-
-  doc.end();
-  return filepath;
-}
 
 // Fungsi generate rekap global semua karyawan dalam bentuk PDF
 exports.generateRekapGlobalPDF = async (req, res, next) => {
@@ -591,6 +471,59 @@ exports.reviewPerpanjanganKontrak = async (req, res, next) => {
         // Dummy histori, nanti bisa diambil dari tabel kontrak
         { mulai: "2023-01-01", akhir: "2024-01-01", status: "Selesai" }
       ]
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Kirim email pemecatan ke karyawan
+ * Endpoint: POST /karyawan/:id/pemecatan
+ * Response: message, karyawanId
+ */
+exports.pemecatanKaryawanById = async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ message: "ID karyawan tidak valid" });
+  }
+
+  try {
+    const karyawan = await prisma.karyawan.findUnique({
+      where: { id },
+      include: {
+        penilaian: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            kriteria: { select: { nama: true } },
+          },
+        },
+      },
+    });
+
+    if (!karyawan) {
+      return res.status(404).json({ message: "Karyawan tidak ditemukan" });
+    }
+
+    if (!karyawan.email) {
+      return res.status(400).json({ message: "Karyawan tidak memiliki alamat email yang valid untuk pengiriman notifikasi." });
+    }
+
+    const ownerName = req.body.ownerName || "[Nama Owner/HRD]";
+    const pdfPath = await generateKaryawanReportPDF(karyawan, karyawan.penilaian, ownerName);
+
+    await sendCustomEmailWithAttachment(
+      karyawan.email,
+      karyawan.nama,
+      "pemecatan",
+      pdfPath,
+      karyawan.penilaian,
+      ownerName
+    );
+
+    res.json({
+      message: `Email pemecatan berhasil dikirim ke ${karyawan.nama}`,
+      karyawanId: id,
     });
   } catch (err) {
     next(err);

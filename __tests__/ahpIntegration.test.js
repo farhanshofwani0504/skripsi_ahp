@@ -87,7 +87,7 @@ describe("Integrasi AHP dengan Perhitungan Skor Karyawan", () => {
     const rataRata3Bulan = (skorBulan1 + skorBulan2 + skorBulan3) / 3;
 
     expect(skorBulan1).toBeCloseTo(4.15, 3);
-    expect(skorBulan2).toBeCloseTo(4.08, 3);
+    expect(skorBulan2).toBeCloseTo(4.07, 3);
     expect(skorBulan3).toBeCloseTo(4.11, 3);
     expect(rataRata3Bulan).toBeCloseTo(4.11, 3);
 

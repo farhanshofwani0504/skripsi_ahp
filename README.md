@@ -1,71 +1,136 @@
-# Proyek Sistem Pendukung Keputusan Karyawan
+# Sistem Pendukung Keputusan Penilaian Kinerja Karyawan (AHP)
 
-Proyek ini adalah sistem pendukung keputusan (SPK) untuk penilaian karyawan menggunakan metode Analitycal Hierarchy Process (AHP).
+## Deskripsi
 
-## Instalasi
+Proyek ini adalah sistem pendukung keputusan (SPK) berbasis web yang dirancang untuk membantu dalam proses penilaian kinerja karyawan menggunakan metode *Analytical Hierarchy Process* (AHP). Sistem ini memungkinkan manajemen untuk melakukan penilaian yang lebih objektif dan terstruktur, menghasilkan peringkat karyawan berdasarkan kriteria yang telah ditentukan.
 
-1.  Clone repositori ini:
+## Fitur Utama
+
+- **Manajemen Pengguna:** Sistem memiliki peran pengguna (Admin dan Owner) dengan hak akses yang berbeda.
+- **Manajemen Karyawan:** CRUD (Create, Read, Update, Delete) untuk data karyawan.
+- **Manajemen Kriteria & Bobot:** Memungkinkan admin untuk menambah, mengubah, dan menghapus kriteria penilaian serta bobotnya.
+- **Proses Penilaian:** Memfasilitasi proses memasukkan nilai kinerja untuk setiap karyawan berdasarkan kriteria yang ada.
+- **Perhitungan AHP:** Secara otomatis menghitung bobot prioritas kriteria dan skor akhir karyawan menggunakan metode AHP.
+- **Perankingan:** Menampilkan hasil perankingan karyawan secara keseluruhan.
+- **Notifikasi Email:** Mengirimkan notifikasi melalui email untuk berbagai keperluan, seperti surat peringatan atau pemecatan.
+- **Laporan:** Menghasilkan laporan dalam format PDF dan Excel.
+- **Manajemen Proposal:** Alur persetujuan proposal untuk perpanjangan kontrak atau tindakan lainnya terkait karyawan.
+
+## Alur Kerja Aplikasi
+
+1.  **Inisialisasi Data:**
+    *   Admin melakukan *seeding* data awal yang diperlukan, seperti data kriteria, bobot, dan pengguna awal melalui `prisma/seed.js`.
+
+2.  **Manajemen Karyawan & Kriteria:**
+    *   Admin dapat menambahkan, mengubah, atau menghapus data karyawan.
+    *   Admin mendefinisikan kriteria yang akan digunakan untuk penilaian dan memberikan bobot perbandingan berpasangan untuk setiap kriteria.
+
+3.  **Proses Penilaian:**
+    *   Admin memasukkan data penilaian untuk setiap karyawan berdasarkan kriteria yang telah ditetapkan.
+
+4.  **Perhitungan & Perankingan:**
+    *   Sistem akan memproses data penilaian menggunakan metode AHP untuk menghitung skor akhir setiap karyawan.
+    *   Hasil perhitungan akan digunakan untuk membuat perankingan karyawan.
+
+5.  **Pengambilan Keputusan:**
+    *   Berdasarkan hasil perankingan dan data lainnya, Admin dapat membuat proposal (misalnya untuk perpanjangan kontrak atau pemecatan).
+    *   Proposal tersebut kemudian dapat disetujui atau ditolak oleh *Owner*.
+
+6.  **Notifikasi:**
+    *   Sistem dapat mengirimkan notifikasi email kepada karyawan terkait hasil penilaian atau keputusan lainnya.
+
+## Teknologi yang Digunakan
+
+- **Backend:** Node.js, Express.js
+- **Database:** PostgreSQL
+- **ORM:** Prisma
+- **Authentication:** JWT (JSON Web Tokens), bcryptjs
+- **Testing:** Jest
+- **Lainnya:** Nodemailer (untuk email), PDFKit (untuk generate PDF), dan lain-lain.
+
+## Instalasi & Setup
+
+1.  **Clone repository:**
     ```bash
-    git clone <URL_repositori>
+    git clone <URL_REPOSITORY_ANDA>
+    cd <NAMA_DIREKTORI>
     ```
-2.  Install dependensi:
+
+2.  **Install dependencies:**
     ```bash
     npm install
     ```
-3.  Buat file `.env` dan konfigurasi variabel lingkungan yang diperlukan.
 
-## Penggunaan
+3.  **Setup database:**
+    *   Pastikan Anda memiliki PostgreSQL yang berjalan.
+    *   Buat file `.env` di root proyek dan konfigurasikan `DATABASE_URL`. Contoh:
+        ```
+        DATABASE_URL="postgresql://user:password@localhost:5432/database_name?schema=public"
+        ```
+    *   Jalankan migrasi Prisma untuk membuat skema database:
+        ```bash
+        npx prisma migrate dev --name init
+        ```
 
-Untuk menjalankan aplikasi, gunakan perintah berikut:
+4.  **Seed data awal (opsional tapi direkomendasikan):**
+    ```bash
+    npx prisma db seed
+    ```
+    *Script* ini akan menjalankan `prisma/seed.js` untuk mengisi data awal yang dibutuhkan.
 
-```bash
-npm start
+5.  **Jalankan aplikasi:**
+    ```bash
+    npm start
+    ```
+    Server akan berjalan di `http://localhost:3000` (atau port yang Anda tentukan di `.env`).
+
+## Struktur Proyek
+
+```
+.
+├── prisma/             # Skema, migrasi, dan seed data Prisma
+├── src/
+│   ├── controllers/    # Logika bisnis untuk setiap endpoint
+│   ├── middleware/     # Middleware untuk otentikasi dan otorisasi
+│   ├── routes/         # Definisi endpoint API
+│   ├── services/       # Logika servis (email, report, dll.)
+│   └── utils/          # Fungsi utilitas (perhitungan AHP, skor, dll.)
+├── __tests__/          # File untuk unit & integration testing
+├── app.js              # Entry point aplikasi Express
+├── package.json        # Dependensi dan skrip proyek
+└── README.md           # Dokumentasi ini
 ```
 
-## Skrip
+## API Endpoints
 
--   `npm start`: Menjalankan aplikasi dengan `nodemon`.
--   `npm test`: Menjalankan tes dengan `jest`.
--   `npm run seed`: Menjalankan proses seeding database.
+Berikut adalah ringkasan dari endpoint API utama yang tersedia:
 
-## Dependensi
+- `POST /api/auth/login`: Login pengguna.
+- `POST /api/auth/forgot-password`: Mengirim email untuk reset password.
+- `POST /api/auth/reset-password/:token`: Mereset password dengan token.
 
--   [@faker-js/faker](https://www.npmjs.com/package/@faker-js/faker): Untuk menghasilkan data palsu.
--   [@prisma/client](https://www.npmjs.com/package/@prisma/client): Klien Prisma untuk berinteraksi dengan database.
--   [bcryptjs](https://www.npmjs.com/package/bcryptjs): Untuk hashing kata sandi.
--   [cors](https://www.npmjs.com/package/cors): Middleware untuk mengaktifkan Cross-Origin Resource Sharing.
--   [csv-parse](https://www.npmjs.com/package/csv-parse): Untuk mem-parsing data CSV.
--   [csv-parser](https://www.npmjs.com/package/csv-parser): Untuk mem-parsing data CSV.
--   [date-fns](https://www.npmjs.com/package/date-fns): Untuk manipulasi tanggal.
--   [dotenv](https://www.npmjs.com/package/dotenv): Untuk memuat variabel lingkungan dari file `.env`.
--   [express](https://www.npmjs.com/package/express): Kerangka kerja web untuk Node.js.
--   [fs-extra](https://www.npmjs.com/package/fs-extra): Untuk operasi sistem file.
--   [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken): Untuk membuat dan memverifikasi JSON Web Tokens.
--   [multer](https://www.npmjs.com/package/multer): Middleware untuk menangani `multipart/form-data`.
--   [nodemailer](https://www.npmjs.com/package/nodemailer): Untuk mengirim email.
--   [nodemon](https://www.npmjs.com/package/nodemon): Untuk me-restart server secara otomatis saat ada perubahan file.
--   [path](https://www.npmjs.com/package/path): Utilitas untuk menangani dan mengubah path file.
--   [pdfkit](https://www.npmjs.com/package/pdfkit): Untuk membuat dokumen PDF.
--   [pdfkit-table](https://www.npmjs.com/package/pdfkit-table): Untuk membuat tabel dalam dokumen PDF.
--   [pg](https://www.npmjs.com/package/pg): Driver PostgreSQL untuk Node.js.
+- `GET /api/karyawan`: Mendapatkan semua data karyawan.
+- `POST /api/karyawan`: Menambah karyawan baru.
+- `GET /api/karyawan/:id`: Mendapatkan detail karyawan.
+- `PATCH /api/karyawan/:id`: Memperbarui data karyawan.
+- `DELETE /api/karyawan/:id`: Menghapus karyawan.
+- `POST /api/karyawan/import-csv-karyawan`: Import data karyawan dari CSV.
 
-## Dependensi Pengembangan
+- `GET /api/kriteria`: Mendapatkan semua kriteria.
+- `POST /api/kriteria`: Menambah kriteria baru.
 
--   [jest](https://www.npmjs.com/package/jest): Kerangka kerja pengujian JavaScript.
--   [prisma](https://www.npmjs.com/package/prisma): Toolkit database untuk Node.js.
+- `GET /api/penilaian`: Mendapatkan data penilaian.
+- `POST /api/penilaian`: Menambah atau memperbarui data penilaian.
 
-## Database
+- `POST /api/ahp/calculate`: Memulai perhitungan AHP.
+- `GET /api/ranking`: Mendapatkan hasil perankingan.
 
-Proyek ini menggunakan Prisma sebagai ORM. Skema database didefinisikan di `prisma/schema.prisma`.
+- `GET /api/dashboard/kesimpulan`: Mendapatkan ringkasan data untuk dashboard.
 
-## API
+- `POST /api/notifikasi/kirim-peringatan`: Mengirim email peringatan massal.
 
-Dokumentasi API dapat ditemukan di [Postman](https://documenter.getpostman.com/view/12345678/your-collection-id).
+- `POST /api/proposal`: Membuat proposal baru.
+- `GET /api/proposal`: Melihat daftar proposal.
+- `PATCH /api/proposal/:id/keputusan`: Menyetujui atau menolak proposal.
 
-## Pengujian
-
-Untuk menjalankan tes, gunakan perintah berikut:
-
-```bash
-npm test
-```
+---

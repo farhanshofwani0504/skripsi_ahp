@@ -65,11 +65,11 @@ const kirimNotifikasiMassal = async (req, res) => {
       const grade = toGrade(rata2);
 
       if (grade === "D" && k.email) {
-        const pdfPath = generateLaporanPDF(k, penilaian, "[Nama Owner/HRD]"); // Ganti dengan nama owner yang sebenarnya
+        const pdfPath = generateLaporanPDF(k, rata2); // Ganti dengan nama owner yang sebenarnya
         await sendCustomEmail(k.email, k.nama, "peringatan", penilaian);
         result.push({ nama: k.nama, status: "Email peringatan terkirim" });
       } else if (grade === "E" && k.email) {
-        const pdfPath = generateLaporanPDF(k, penilaian, "[Nama Owner/HRD]"); // Ganti dengan nama owner yang sebenarnya
+        const pdfPath = generateLaporanPDF(k, rata2); // Ganti dengan nama owner yang sebenarnya
         await sendCustomEmailWithAttachment(
           k.email,
           k.nama,
@@ -135,7 +135,7 @@ const kirimPeringatan = async (req, res) => {
 
 // PASTIKAN BLOK INI ADA DI PALING BAWAH
 module.exports = {
-  kirimNotifikasiMassal,
+  kirimNotifikasiMassal: kirimNotifikasiMassal,
   kirimEmailKaryawan,
   kirimPeringatan,
 };

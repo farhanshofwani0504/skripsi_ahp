@@ -160,6 +160,11 @@ describe("Login Controller", () => {
     expect(responseJson).toHaveBeenCalledWith({
       message: "Login sukses",
       token: mockToken,
+      user: {
+        username: mockUser.username,
+        email: mockUser.email,
+        role: mockUser.role,
+      },
     });
   });
 
