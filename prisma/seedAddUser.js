@@ -10,8 +10,8 @@ async function main() {
     where: { email: 'admin@example.com' },
     update: {},
     create: {
-      username: 'iqsanfaisal',
-      email: 'iqsanfm@gmail.com',
+      username: 'hr_bukipet',
+      email: 'hr_bukipet@gmail.com',
       password: adminPassword,
       role: 'ADMIN',
     },
@@ -21,8 +21,8 @@ async function main() {
     where: { email: 'owner@example.com' },
     update: {},
     create: {
-      username: 'juan',
-      email: 'juanhanafi@gmail.com',
+      username: 'owner_bukipet',
+      email: 'owner_bukipet@gmail.com',
       password: ownerPassword,
       role: 'OWNER',
     },

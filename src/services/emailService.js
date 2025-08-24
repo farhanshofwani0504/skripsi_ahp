@@ -121,16 +121,22 @@ ${ownerName}`;
     return;
   }
 
+  // Handle both Buffer and file path attachments
+  const attachment = Buffer.isBuffer(attachmentPath) 
+    ? {
+        filename: `laporan_${nama.replace(/\s+/g, '_')}_${Date.now()}.pdf`,
+        content: attachmentPath,
+      }
+    : {
+        filename: path.basename(attachmentPath),
+        path: attachmentPath,
+      };
+
   await transporter.sendMail({
     from: '"HRD Team" <noreply@example.com>',
     to,
     subject,
     text,
-    attachments: [
-      {
-        filename: path.basename(attachmentPath),
-        path: attachmentPath,
-      },
-    ],
+    attachments: [attachment],
   });
 }

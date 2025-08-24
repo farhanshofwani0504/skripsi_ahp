@@ -509,7 +509,8 @@ exports.pemecatanKaryawanById = async (req, res, next) => {
       return res.status(400).json({ message: "Karyawan tidak memiliki alamat email yang valid untuk pengiriman notifikasi." });
     }
 
-    const ownerName = req.body.ownerName || "[Nama Owner/HRD]";
+    const ownerName = req.body?.ownerName || "[Nama Owner/HRD]";
+    console.log('ownerName', ownerName);
     const pdfPath = await generateKaryawanReportPDF(karyawan, karyawan.penilaian, ownerName);
 
     await sendCustomEmailWithAttachment(
